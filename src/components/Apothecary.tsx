@@ -435,9 +435,6 @@ export function Footer() {
       </div>
       <div className="mx-auto flex max-w-7xl flex-col gap-3 border-t border-white/10 px-5 py-6 text-[11px] text-white/45 sm:flex-row sm:items-center sm:justify-between md:px-8">
         <span>© 2026 Herba.ba. Sva prava zadržana.</span>
-        <a className="font-semibold text-white underline underline-offset-4 hover:text-[#d7efbd]" href={`${import.meta.env.BASE_URL}herba-export.tar.gz`} download="herba-export.tar.gz">
-          Preuzmi projekt · export
-        </a>
         <span>Privatnost · Uslovi korištenja</span>
       </div>
     </footer>

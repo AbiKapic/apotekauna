@@ -226,13 +226,6 @@ function Root() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3 lg:gap-6">
-            <a
-              href={`${import.meta.env.BASE_URL}herba-export.tar.gz`}
-              download="react-apoteka.tar.gz"
-              className="rounded-lg bg-[#294f41] px-3 py-2.5 text-[11px] font-medium text-white transition hover:bg-[#183c30]"
-            >
-              Preuzmi React projekt ↓
-            </a>
             <Link to="/proizvodi" aria-label="Pretraži proizvode">
               <Search size={20} strokeWidth={1.6} />
             </Link>
@@ -285,9 +278,6 @@ function Root() {
           className={`${wrap} flex justify-between border-t border-border py-5 text-[10px] text-[#798174]`}
         >
           <span>© 2026 Online apoteka</span>
-          <a href="/herba-export.tar.gz" download>
-            Preuzmi React projekt ↗
-          </a>
         </div>
       </footer>
       {cart && (
