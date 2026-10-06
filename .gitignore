@@ -1,0 +1,11 @@
+node_modules/
+.pnpm-store/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+*.log
+public/herba-export.tar.gz
+.DS_Store
+Thumbs.db

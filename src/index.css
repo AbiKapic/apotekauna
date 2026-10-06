@@ -1,0 +1,10 @@
+@import "./styles/fonts.css";
+@import "tailwindcss";
+@import "./styles/theme.css";
+
+@layer base {
+  body { background: #fcfcf9; color: #203e36; font-family: var(--font-sans); }
+  button, a { cursor: pointer; }
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid #587660; outline-offset: 4px; }
+  ::selection { background: #dce8ce; }
+}
