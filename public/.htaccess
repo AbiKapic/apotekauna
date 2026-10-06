@@ -1,0 +1,15 @@
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Serve real files and directories, including assets and catalog.json.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Missing assets should return 404 rather than the application HTML.
+  RewriteRule ^assets/ - [L]
+
+  # React Router handles the remaining page routes.
+  RewriteRule ^ index.html [L]
+</IfModule>

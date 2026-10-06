@@ -8,7 +8,7 @@ const projectDirectory = join(temporaryDirectory, "herba")
 try {
   mkdirSync(projectDirectory)
   for (const file of [
-    "src", "public", "docs", "scripts", "index.html", "package.json",
+    "src", "public", "docs", "scripts", ".github", "index.html", "package.json",
     "pnpm-lock.yaml", "tsconfig.json", "vite.config.ts", "README.md",
     ".gitignore", ".editorconfig", ".env.example",
   ]) {
