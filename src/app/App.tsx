@@ -3,6 +3,8 @@ import {
   useContext,
   useEffect,
   useState,
+  lazy,
+  Suspense,
   type ReactNode,
 } from "react"
 import {
@@ -942,7 +944,13 @@ function NotFound() {
     </Page>
   )
 }
+const AdminDesign = lazy(() => import("../admin/Admin").then(module => ({ default: module.Admin })));
+function AdminPreview() {
+  return <Suspense fallback={<div className="p-8">Učitavanje administracije…</div>}><AdminDesign /></Suspense>;
+}
 const router = createBrowserRouter([
+  { path: "admin", Component: AdminPreview },
+  { path: "admin/:section", Component: AdminPreview },
   {
     Component: Root,
     children: [
