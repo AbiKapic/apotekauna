@@ -1,3 +1,5 @@
+import { readStorefrontCatalog } from "../lib/catalog"
+import { AdminAccess } from "../admin/AdminAccess"
 import {
   createContext,
   useContext,
@@ -125,13 +127,7 @@ function Root() {
   const [menu, setMenu] = useState(false)
   useEffect(() => {
     const controller = new AbortController()
-    fetch(import.meta.env.VITE_CATALOG_URL || "/catalog.json", {
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error()
-        return response.json()
-      })
+    readStorefrontCatalog(controller.signal)
       .then((result) => {
         if (
           !Array.isArray(result.products) ||
@@ -946,7 +942,7 @@ function NotFound() {
 }
 const AdminDesign = lazy(() => import("../admin/Admin").then(module => ({ default: module.Admin })));
 function AdminPreview() {
-  return <Suspense fallback={<div className="p-8">Učitavanje administracije…</div>}><AdminDesign /></Suspense>;
+  return <AdminAccess><Suspense fallback={<div className="p-8">Učitavanje administracije…</div>}><AdminDesign /></Suspense></AdminAccess>;
 }
 const router = createBrowserRouter([
   { path: "admin", Component: AdminPreview },

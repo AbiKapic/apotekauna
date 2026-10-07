@@ -6,6 +6,6 @@ Routes: /admin and /admin/produkti (products), /admin/kategorije (categories), /
 
 Includes responsive sidebar, search, category filter, sorting, product pagination, selection, edit/add dialogs, delete confirmations, category and article cards, image previews and an empty inbox. Links back to the storefront use the same domain.
 
-This is an unauthenticated design preview. It reads the existing demo catalog and saves edits only under the separate apoteka-admin-design-v1 localStorage key. It cannot write to a remote API or change the public catalog. Inbox and uploads are not connected. Clear that storage key to reset demo edits.
+The design is now connected to Supabase email/password authentication and approved admin membership. Catalog edits save through a protected database function and are read by the storefront. The previous demo localStorage catalog is no longer used. Inbox and uploads are not connected.
 
-Before enabling real administration, implement Supabase Auth, admin authorization and row-level security, shared catalog persistence, storage uploads and inbox integration. No credentials or Supabase configuration are required for the design preview.
+Apply the SQL and account setup in docs/SUPABASE.md before using administration. Storage uploads and inbox integration remain future work.

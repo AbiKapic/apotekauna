@@ -64,7 +64,7 @@ function Editor({ edit, data, save, close }: { edit: Edit; data: Catalog; save: 
     {edit.kind === "clanci" && <><Field label="Naslov *"><input autoFocus className={input} name="title" required defaultValue={article?.title}/></Field><Field label="Tema *"><input className={input} name="tag" required defaultValue={article?.tag}/></Field><Field label="Sažetak *"><textarea className={input} name="summary" required rows={2} defaultValue={article?.summary}/></Field><Field label="Sadržaj članka *"><textarea className={input} name="content" required rows={8} defaultValue={article?.content}/></Field></>}
     {edit.kind !== "kategorije" && <Field label="URL fotografije *"><input className={input} name="image" type="url" required value={image} onChange={event => setImage(event.target.value)} placeholder="https://…"/><span className="mt-2 block text-[11px] text-[#8a9482]">Koristite URL fotografije iz vašeg sistema za datoteke.</span>{image.startsWith("https://") && <img className="mt-3 h-32 w-full rounded-lg bg-[#edf0e7] object-contain" src={image} alt="Pregled fotografije"/>}</Field>}
     {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-xs text-red-800">{error}</p>}
-    <div className="flex items-center gap-2 rounded-lg bg-[#eef2e7] p-3 text-[11px] text-[#738267]"><CheckCircle2 size={16}/>Promjene se čuvaju samo u demo administraciji ovog preglednika.</div>
+    <div className="flex items-center gap-2 rounded-lg bg-[#eef2e7] p-3 text-[11px] text-[#738267]"><CheckCircle2 size={16}/>Sačuvani sadržaj prikazuje se na javnoj stranici.</div>
   </div><div className="flex justify-end gap-3 border-t border-[#e0e5dc] px-7 py-5"><button type="button" disabled={busy} onClick={close} className="rounded-lg border border-[#dfe4db] px-5 py-2.5 text-xs">Odustani</button><button className={button} disabled={busy}><Check size={16}/>{busy ? "Spremanje…" : "Sačuvaj promjene"}</button></div></form></Modal>;
 }
 
@@ -85,7 +85,7 @@ export function Admin() {
   const [collapsed,setCollapsed] = useState(false);
   useEffect(() => { setQuery(""); setFilter(""); setPage(1); setSelected([]); setNotice(""); }, [section]);
   useEffect(() => { setPage(1); }, [query,filter,sort]);
-  const saved = async (next: Catalog) => { await save(next); setNotice("Demo promjene su sačuvane u ovom pregledniku."); };
+  const saved = async (next: Catalog) => { await save(next); setNotice("Promjene su sačuvane. Javna stranica je ažurirana."); };
   const askDelete = (ids: string[]) => { setDeleteError(""); setDeleting(ids); };
   const remove = async () => {
     if (!data || !deleting) return;
@@ -130,7 +130,7 @@ export function Admin() {
       </main>
     </div>
     {edit && data && <Editor edit={edit} data={data} save={saved} close={() => setEdit(null)}/>}
-    {deleting && <Modal label="Potvrda brisanja" close={() => { if(!busy) setDeleting(null); }}><div className="p-7"><span className="grid size-11 place-items-center rounded-xl bg-[#f6e9df] text-[#ad7e61]"><Trash2 size={21}/></span><h2 className="mt-5 text-xl font-medium">Obrisati odabrani sadržaj?</h2><p className="mt-3 text-sm leading-6 text-[#89967d]">Broj odabranih stavki: {deleting.length}. Sadržaj će biti uklonjen samo iz ovog demo prostora. Ova radnja se ne može poništiti.</p>{deleteError && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-xs text-red-800">{deleteError}</p>}<div className="mt-7 flex justify-end gap-3"><button disabled={busy} onClick={() => setDeleting(null)} className="rounded-lg border border-[#dfe5d7] px-4 py-2.5 text-xs">Odustani</button><button disabled={busy} onClick={remove} className="rounded-lg bg-[#a46e53] px-4 py-2.5 text-xs text-white disabled:opacity-40">{busy ? "Brisanje…" : "Da, obriši"}</button></div></div></Modal>}
+    {deleting && <Modal label="Potvrda brisanja" close={() => { if(!busy) setDeleting(null); }}><div className="p-7"><span className="grid size-11 place-items-center rounded-xl bg-[#f6e9df] text-[#ad7e61]"><Trash2 size={21}/></span><h2 className="mt-5 text-xl font-medium">Obrisati odabrani sadržaj?</h2><p className="mt-3 text-sm leading-6 text-[#89967d]">Broj odabranih stavki: {deleting.length}. Sadržaj će biti uklonjen i s javne stranice. Ova radnja se ne može poništiti.</p>{deleteError && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-xs text-red-800">{deleteError}</p>}<div className="mt-7 flex justify-end gap-3"><button disabled={busy} onClick={() => setDeleting(null)} className="rounded-lg border border-[#dfe5d7] px-4 py-2.5 text-xs">Odustani</button><button disabled={busy} onClick={remove} className="rounded-lg bg-[#a46e53] px-4 py-2.5 text-xs text-white disabled:opacity-40">{busy ? "Brisanje…" : "Da, obriši"}</button></div></div></Modal>}
   </div>;
 }
 
