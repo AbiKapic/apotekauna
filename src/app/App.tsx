@@ -1,4 +1,5 @@
 import { readStorefrontCatalog } from "../lib/catalog"
+import { ProductImage } from "../components/ProductImage"
 import { AdminAccess } from "../admin/AdminAccess"
 import {
   createContext,
@@ -311,7 +312,7 @@ function Root() {
                   key={item.product.id}
                   className="flex gap-4 border-b border-border py-5"
                 >
-                  <img
+                  <ProductImage
                     className="size-16 rounded object-cover"
                     src={item.product.image}
                     alt={item.product.name}
@@ -446,7 +447,7 @@ function ProductCard({ product }: { product: Product }) {
     <article className="group overflow-hidden rounded-xl border border-border bg-white">
       <Link to={`/proizvodi/${product.id}`} className="relative block">
         <div className="h-[235px] overflow-hidden bg-[#f4f5ef]">
-          <img
+          <ProductImage
             src={product.image}
             alt={product.name}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -817,7 +818,7 @@ function ProductDetail() {
   return (
     <Page title={product.name}>
       <div className="grid items-center gap-12 md:grid-cols-2">
-        <img
+        <ProductImage
           src={product.image}
           alt={product.name}
           className="h-[450px] w-full rounded-xl object-cover"

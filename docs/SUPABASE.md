@@ -19,4 +19,4 @@ Catalog reads are public. Authenticated sessions can read only their own admin m
 
 The storefront falls back to the original public/catalog.json during initial setup or database outages; it may show that older demonstration catalog then. Admin never falls back to editable demo storage. Public pages load current data on navigation from admin or refresh; live subscription updates are not enabled.
 
-Products, categories and articles share the existing catalog JSON structure. Inbox, image upload, payments and order processing remain unimplemented. The database setup has not been applied automatically; SQL permissions must be validated against your project after running it.
+Products now live in the separate products table with draft/published status; categories, articles, hero and contact remain in store_catalog. Follow PRODUCT-IMPORT.md and run products.sql after the initial setup. Inbox, image upload, payments and order processing remain unimplemented. SQL permissions must be validated against your project after running it.
