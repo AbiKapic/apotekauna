@@ -1,5 +1,7 @@
 import { readStorefrontCatalog } from "../lib/catalog"
 import { ProductImage } from "../components/ProductImage"
+import { Pagination } from "../components/Pagination"
+import { paginate } from "../lib/pagination"
 import { AdminAccess } from "../admin/AdminAccess"
 import {
   createContext,
@@ -521,6 +523,7 @@ function Pharmacist() {
   )
 }
 function Home() {
+  const [featuredPage, setFeaturedPage] = useState(1)
   const { data } = useContext(Store)
   const [query, setQuery] = useState("")
   return (
@@ -644,10 +647,11 @@ function Home() {
               to="/proizvodi"
             />
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {data.products.slice(0, 4).map((product) => (
+              {paginate(data.products, featuredPage, 4).items.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+            <Pagination {...paginate(data.products, featuredPage, 4)} total={data.products.length} onChange={setFeaturedPage} />
           </section>
           <section
             className={`${wrap} grid gap-6 pb-16 md:grid-cols-[1.2fr_1fr]`}
@@ -727,7 +731,7 @@ function ProductsPage() {
   const { data } = useContext(Store)
   const { categoryId } = useParams()
   const [params, setParams] = useSearchParams()
-  const [sort, setSort] = useState("default")
+  const sort = params.get("sort") || "default"
   if (!data) return <Loading />
   const category = data.categories.find((item) => item.id === categoryId)
   if (categoryId && !category) return <NotFound />
@@ -748,6 +752,10 @@ function ProductsPage() {
           ? second.price - first.price
           : 0,
     )
+  const pagination = paginate(products, Number(params.get("page") || 1), 12)
+  const changePage = (page: number) => {
+    setParams(previous => { const next = new URLSearchParams(previous); next.set("page", String(page)); return next })
+  }
   return (
     <Page
       title={category?.name || "Proizvodi"}
@@ -762,6 +770,7 @@ function ProductsPage() {
           onChange={(event) =>
             setParams((previous) => {
               previous.set("q", event.target.value)
+              previous.delete("page")
               return previous
             })
           }
@@ -774,6 +783,7 @@ function ProductsPage() {
             onChange={(event) =>
               setParams((previous) => {
                 previous.set("category", event.target.value)
+                previous.delete("page")
                 return previous
               })
             }
@@ -789,7 +799,7 @@ function ProductsPage() {
         <select
           aria-label="Sortiranje"
           value={sort}
-          onChange={(event) => setSort(event.target.value)}
+          onChange={(event) => setParams(previous => { const next = new URLSearchParams(previous); next.set("sort", event.target.value); next.delete("page"); return next })}
           className="rounded-lg border border-border px-3 py-3 text-sm"
         >
           <option value="default">Preporučeno</option>
@@ -799,10 +809,11 @@ function ProductsPage() {
       </div>
       <p className="mb-5 text-xs text-[#839079]">{products.length} proizvoda</p>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((product) => (
+        {pagination.items.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
+      <Pagination {...pagination} total={products.length} onChange={changePage} />
       {!products.length && (
         <p className="py-10 text-sm">Nema proizvoda za odabrane kriterije.</p>
       )}
