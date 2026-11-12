@@ -94,7 +94,8 @@ begin
   )) then raise exception 'category_in_use'; end if;
   update public.store_catalog set
     content = content || jsonb_build_object('categories',next_metadata->'categories','advice',next_metadata->'advice',
-      'hero',next_metadata->'hero','contact',next_metadata->'contact'),
+      'hero',next_metadata->'hero','contact',next_metadata->'contact') ||
+      case when jsonb_typeof(next_metadata->'collections') = 'object' then jsonb_build_object('collections', next_metadata->'collections') else '{}'::jsonb end,
     version = version + 1, updated_at = now() where id = 1;
   return current_version + 1;
 end;

@@ -1,8 +1,13 @@
 import { readStorefrontCatalog } from "../lib/catalog"
+
 import { ProductImage } from "../components/ProductImage"
+
 import { Pagination } from "../components/Pagination"
+
 import { paginate } from "../lib/pagination"
+
 import { AdminAccess } from "../admin/AdminAccess"
+
 import {
   createContext,
   useContext,
@@ -12,6 +17,7 @@ import {
   Suspense,
   type ReactNode,
 } from "react"
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -21,6 +27,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router"
+
 import {
   ArrowRight,
   ArrowUpRight,
@@ -45,75 +52,63 @@ import {
   Phone,
 } from "lucide-react"
 
-type Product = {
-  id: string
-  name: string
-  brand: string
-  category: string
-  price: number
-  oldPrice?: number
-  image: string
-  badge?: string
-  description: string
-}
-type Category = {
-  id: string
-  name: string
-  description: string
-  icon: string
-  image?: string
-}
-type Advice = {
-  id: string
-  title: string
-  summary: string
-  image: string
-  content: string
-  tag: string
-}
-type Catalog = {
-  products: Product[]
-  categories: Category[]
-  advice: Advice[]
-  hero: string
-  contact: {
-    email: string
-    phone: string
-    hours: string
-  }
-}
+import type { Product, Category, Advice, Catalog } from "../admin/catalog"
+import {
+  collectionsFor,
+  collectionProducts,
+  applyPromotions,
+} from "../lib/collections"
 type Item = {
   product: Product
+
   quantity: number
 }
+
 const Store = createContext<{
   data: Catalog | null
+
   error: string
+
   items: Item[]
+
   add: (product: Product) => void
+
   change: (id: string, delta: number) => void
+
   open: () => void
 }>(null!)
+
 const money = (value: number) =>
   `${value.toLocaleString("bs-BA", { minimumFractionDigits: 2 })} KM`
+
 const primary =
   "inline-flex items-center justify-center gap-3 rounded-lg bg-[#294f41] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#183c30]"
+
 const wrap = "mx-auto max-w-[1240px] px-6 lg:px-10"
+
 const icons: Record<string, typeof Leaf> = {
   leaf: Leaf,
+
   heart: HeartPulse,
+
   beauty: Droplets,
+
   baby: Baby,
+
   sun: Sun,
+
   pill: Pill,
 }
 
 function Root() {
   const [data, setData] = useState<Catalog | null>(null)
+
   const [error, setError] = useState("")
+
   const [items, setItems] = useState<Item[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("pharmacy-cart") || "[]")
+
       return Array.isArray(saved)
         ? saved.filter(
             (item) =>
@@ -126,11 +121,16 @@ function Root() {
       return []
     }
   })
+
   const [cart, setCart] = useState(false)
+
   const [menu, setMenu] = useState(false)
+
   useEffect(() => {
     const controller = new AbortController()
+
     readStorefrontCatalog(controller.signal)
+
       .then((result) => {
         if (
           !Array.isArray(result.products) ||
@@ -138,27 +138,43 @@ function Root() {
           !Array.isArray(result.advice)
         )
           throw new Error()
-        setData(result)
+
+        setData(applyPromotions(result))
       })
+
       .catch((err) => {
         if (err.name !== "AbortError")
           setError(
             "Ponudu trenutno nije moguće učitati. Molimo pokušajte ponovo.",
           )
       })
+
     return () => controller.abort()
   }, [])
+
+  useEffect(() => {
+    if (!data) return
+    setItems(previous => previous.flatMap(item => {
+      const product = data.products.find(product => product.id === item.product.id)
+      return product ? [{ ...item, product }] : []
+    }))
+  }, [data])
   useEffect(() => {
     localStorage.setItem("pharmacy-cart", JSON.stringify(items))
   }, [items])
+
   useEffect(() => {
     if (!cart) return
+
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") setCart(false)
     }
+
     document.addEventListener("keydown", handler)
+
     return () => document.removeEventListener("keydown", handler)
   }, [cart])
+
   const add = (product: Product) =>
     setItems((previous) =>
       previous.some((item) => item.product.id === product.id)
@@ -169,23 +185,34 @@ function Root() {
           )
         : [...previous, { product, quantity: 1 }],
     )
+
   const change = (id: string, delta: number) =>
     setItems((previous) =>
       previous
+
         .map((item) =>
           item.product.id === id
             ? { ...item, quantity: item.quantity + delta }
             : item,
         )
+
         .filter((item) => item.quantity > 0),
     )
+
   const links = [
     ["/", "Početna"],
+
     ["/kategorije", "Kategorije"],
+
     ["/proizvodi", "Proizvodi"],
-    ["/savjeti", "Savjeti"],
+
+    ["/akcija", "U Akciji"],
+    ["/popularno", "Popularno"],
+    ["/clanci", "Članci"],
+
     ["/kontakt", "Kontakt"],
   ]
+
   return (
     <Store.Provider
       value={{ data, error, items, add, change, open: () => setCart(true) }}
@@ -208,7 +235,7 @@ function Root() {
           >
             <Menu size={22} />
           </button>
-          <nav className="hidden h-full items-center gap-9 md:flex">
+          <nav className="hidden h-full items-center gap-5 md:flex">
             {links.map(([href, label]) => (
               <NavLink
                 end={href === "/"}
@@ -347,6 +374,7 @@ function Root() {
                 {money(
                   items.reduce(
                     (sum, item) => sum + item.quantity * item.product.price,
+
                     0,
                   ),
                 )}
@@ -365,6 +393,7 @@ function Root() {
 
 function Loading() {
   const { error } = useContext(Store)
+
   return (
     <div
       role="status"
@@ -374,15 +403,22 @@ function Loading() {
     </div>
   )
 }
+
 function Heading({
   eyebrow,
+
   title,
+
   link,
+
   to,
 }: {
   eyebrow: string
+
   title: string
+
   link?: string
+
   to?: string
 }) {
   return (
@@ -407,8 +443,10 @@ function Heading({
     </div>
   )
 }
+
 function Categories({ full = false }: { full?: boolean }) {
   const { data } = useContext(Store)
+
   return (
     <div
       className={`grid grid-cols-2 gap-3 ${
@@ -417,6 +455,7 @@ function Categories({ full = false }: { full?: boolean }) {
     >
       {data?.categories.map((category) => {
         const Icon = icons[category.icon] || Leaf
+
         return (
           <Link
             key={category.id}
@@ -442,9 +481,12 @@ function Categories({ full = false }: { full?: boolean }) {
     </div>
   )
 }
+
 function ProductCard({ product }: { product: Product }) {
   const { add } = useContext(Store)
+
   const [added, setAdded] = useState(false)
+
   return (
     <article className="group overflow-hidden rounded-xl border border-border bg-white">
       <Link to={`/proizvodi/${product.id}`} className="relative block">
@@ -455,9 +497,12 @@ function ProductCard({ product }: { product: Product }) {
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         </div>
-        {product.badge && (
+        {(product.badge ||
+          (product.oldPrice && product.oldPrice > product.price)) && (
           <span className="absolute left-4 top-4 rounded bg-white/95 px-2.5 py-1 text-[10px] font-medium">
-            {product.badge}
+            {product.oldPrice && product.oldPrice > product.price
+              ? `−${Math.round((1 - product.price / product.oldPrice) * 100)}%`
+              : product.badge}
           </span>
         )}
       </Link>
@@ -487,7 +532,9 @@ function ProductCard({ product }: { product: Product }) {
             aria-label={`Dodaj ${product.name} u korpu`}
             onClick={() => {
               add(product)
+
               setAdded(true)
+
               window.setTimeout(() => setAdded(false), 1600)
             }}
             className="grid size-9 place-items-center rounded-lg bg-[#edf1e5] text-[#42603c] transition hover:bg-[#dce6ce]"
@@ -499,6 +546,7 @@ function ProductCard({ product }: { product: Product }) {
     </article>
   )
 }
+
 function Pharmacist() {
   return (
     <section className="relative overflow-hidden rounded-xl border border-[#dfe5d7] bg-[#eef2e6] p-8 lg:p-11">
@@ -522,10 +570,13 @@ function Pharmacist() {
     </section>
   )
 }
+
 function Home() {
-  const [featuredPage, setFeaturedPage] = useState(1)
+
   const { data } = useContext(Store)
+
   const [query, setQuery] = useState("")
+
   return (
     <>
       <section className="bg-[#eef1e7]">
@@ -598,17 +649,24 @@ function Home() {
           {[
             [
               ShieldCheck,
+
               "Provjeren kvalitet",
+
               "Originalni i pažljivo odabrani proizvodi",
             ],
+
             [Truck, "Pouzdana dostava", "Na vašu adresu, širom BiH"],
+
             [
               MessageSquare,
+
               "Stručan savjet",
+
               "Farmaceut kojem se možete obratiti",
             ],
           ].map(([Icon, title, subtitle]) => {
             const Glyph = Icon as typeof ShieldCheck
+
             return (
               <div
                 key={String(title)}
@@ -639,35 +697,111 @@ function Home() {
             />
             <Categories />
           </section>
-          <section className={`${wrap} pb-14 pt-1`}>
-            <Heading
-              eyebrow="Pažljivo odabrano"
-              title="Izdvojeno za vas"
-              link="Pogledajte sve proizvode"
-              to="/proizvodi"
-            />
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {paginate(data.products, featuredPage, 4).items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-            <Pagination {...paginate(data.products, featuredPage, 4)} total={data.products.length} onChange={setFeaturedPage} />
-          </section>
+          <CollectionSection kind="sale" />
+          <CollectionSection kind="popular" />
           <section
             className={`${wrap} grid gap-6 pb-16 md:grid-cols-[1.2fr_1fr]`}
           >
             {data.advice[0] && <AdviceCard advice={data.advice[0]} />}
             <Pharmacist />
           </section>
+          <section className={`${wrap} pb-16`}>
+            <Heading eyebrow="Zdravstveni kutak" title="Članci" link="Svi članci" to="/clanci" />
+            <ArticleList />
+          </section>
         </>
       )}
+    </>
+  )
+}
+
+function CollectionSection({
+  kind,
+  full = false,
+}: {
+  kind: "sale" | "popular"
+  full?: boolean
+}) {
+  const { data } = useContext(Store)
+  const [params, setParams] = useSearchParams()
+  if (!data) return <Loading />
+  const collection = collectionsFor(data)[kind]
+  if (!collection.enabled)
+    return full ? (
+      <Page title={collection.title} subtitle="Ponuda trenutno nije dostupna.">
+        {null}
+      </Page>
+    ) : null
+  const products = collectionProducts(data, collection)
+  const pagination = paginate(
+    products,
+    full ? Number(params.get("page") || 1) : 1,
+    full ? 12 : 5,
+  )
+  return (
+    <section className={wrap + " py-10"}>
+      <Heading
+        eyebrow={kind === "sale" ? "Posebna ponuda" : "Vaš odabir"}
+        title={collection.title}
+        link={full ? undefined : "Pogledajte sve"}
+        to={kind === "sale" ? "/akcija" : "/popularno"}
+      />
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        {pagination.items.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+      {!products.length && (
+        <p className="text-sm text-[#758074]">Ponuda je uskoro dostupna.</p>
+      )}
+      {full && (
+        <Pagination
+          {...pagination}
+          total={products.length}
+          onChange={(page) => setParams({ page: String(page) })}
+        />
+      )}
+    </section>
+  )
+}
+function ArticleList() {
+  const { data } = useContext(Store)
+  const [params, setParams] = useSearchParams()
+  const pagination = paginate(
+    data?.advice || [],
+    Number(params.get("clanciPage") || 1),
+    6,
+  )
+  return (
+    <>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {pagination.items.map((item) => (
+          <AdviceCard key={item.id} advice={item} />
+        ))}
+      </div>
+      {!data?.advice.length && (
+        <p className="text-sm text-[#758074]">
+          Članci će uskoro biti dostupni.
+        </p>
+      )}
+      <Pagination
+        {...pagination}
+        total={data?.advice.length || 0}
+        onChange={(page) =>
+          setParams((previous) => {
+            const next = new URLSearchParams(previous)
+            next.set("clanciPage", String(page))
+            return next
+          })
+        }
+      />
     </>
   )
 }
 function AdviceCard({ advice }: { advice: Advice }) {
   return (
     <Link
-      to={`/savjeti/${advice.id}`}
+      to={`/clanci/${advice.id}`}
       className="group relative flex min-h-[350px] overflow-hidden rounded-xl"
     >
       <img
@@ -692,13 +826,18 @@ function AdviceCard({ advice }: { advice: Advice }) {
     </Link>
   )
 }
+
 function Page({
   title,
+
   subtitle,
+
   children,
 }: {
   title: string
+
   subtitle?: string
+
   children: ReactNode
 }) {
   return (
@@ -716,8 +855,10 @@ function Page({
     </div>
   )
 }
+
 function CategoryPage() {
   const { data } = useContext(Store)
+
   return (
     <Page
       title="Kategorije"
@@ -727,24 +868,38 @@ function CategoryPage() {
     </Page>
   )
 }
+
 function ProductsPage() {
   const { data } = useContext(Store)
+
   const { categoryId } = useParams()
+
   const [params, setParams] = useSearchParams()
+
   const sort = params.get("sort") || "default"
+
   if (!data) return <Loading />
+
   const category = data.categories.find((item) => item.id === categoryId)
+
   if (categoryId && !category) return <NotFound />
+
   const query = params.get("q") || ""
+
   const selected = categoryId || params.get("category") || ""
+
   const products = data.products
+
     .filter(
       (item) =>
         (!selected || item.category === selected) &&
         `${item.name} ${item.brand}`
+
           .toLowerCase()
+
           .includes(query.toLowerCase()),
     )
+
     .sort((first, second) =>
       sort === "low"
         ? first.price - second.price
@@ -752,10 +907,17 @@ function ProductsPage() {
           ? second.price - first.price
           : 0,
     )
+
   const pagination = paginate(products, Number(params.get("page") || 1), 12)
+
   const changePage = (page: number) => {
-    setParams(previous => { const next = new URLSearchParams(previous); next.set("page", String(page)); return next })
+    setParams((previous) => {
+      const next = new URLSearchParams(previous)
+      next.set("page", String(page))
+      return next
+    })
   }
+
   return (
     <Page
       title={category?.name || "Proizvodi"}
@@ -770,7 +932,9 @@ function ProductsPage() {
           onChange={(event) =>
             setParams((previous) => {
               previous.set("q", event.target.value)
+
               previous.delete("page")
+
               return previous
             })
           }
@@ -783,7 +947,9 @@ function ProductsPage() {
             onChange={(event) =>
               setParams((previous) => {
                 previous.set("category", event.target.value)
+
                 previous.delete("page")
+
                 return previous
               })
             }
@@ -799,7 +965,14 @@ function ProductsPage() {
         <select
           aria-label="Sortiranje"
           value={sort}
-          onChange={(event) => setParams(previous => { const next = new URLSearchParams(previous); next.set("sort", event.target.value); next.delete("page"); return next })}
+          onChange={(event) =>
+            setParams((previous) => {
+              const next = new URLSearchParams(previous)
+              next.set("sort", event.target.value)
+              next.delete("page")
+              return next
+            })
+          }
           className="rounded-lg border border-border px-3 py-3 text-sm"
         >
           <option value="default">Preporučeno</option>
@@ -813,19 +986,29 @@ function ProductsPage() {
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-      <Pagination {...pagination} total={products.length} onChange={changePage} />
+      <Pagination
+        {...pagination}
+        total={products.length}
+        onChange={changePage}
+      />
       {!products.length && (
         <p className="py-10 text-sm">Nema proizvoda za odabrane kriterije.</p>
       )}
     </Page>
   )
 }
+
 function ProductDetail() {
   const { data, add, open } = useContext(Store)
+
   const { id } = useParams()
+
   if (!data) return <Loading />
+
   const product = data.products.find((item) => item.id === id)
+
   if (!product) return <NotFound />
+
   return (
     <Page title={product.name}>
       <div className="grid items-center gap-12 md:grid-cols-2">
@@ -844,6 +1027,7 @@ function ProductDetail() {
             className={`${primary} mt-7`}
             onClick={() => {
               add(product)
+
               open()
             }}
           >
@@ -858,15 +1042,21 @@ function ProductDetail() {
     </Page>
   )
 }
+
 function AdvicePage() {
   const { data } = useContext(Store)
+
   const { id } = useParams()
+
   if (!data) return <Loading />
+
   const advice = data.advice.find((item) => item.id === id)
+
   if (id && !advice) return <NotFound />
+
   return (
     <Page
-      title={advice?.title || "Savjeti"}
+      title={advice?.title || "Članci"}
       subtitle={
         advice?.summary ||
         "Korisne informacije za male, zdravije svakodnevne izbore."
@@ -888,18 +1078,17 @@ function AdvicePage() {
           </p>
         </article>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {data.advice.map((item) => (
-            <AdviceCard key={item.id} advice={item} />
-          ))}
-        </div>
+        <ArticleList />
       )}
     </Page>
   )
 }
+
 function Contact() {
   const { data } = useContext(Store)
+
   const [params] = useSearchParams()
+
   return (
     <Page
       title={params.get("tema") ? "Pitajte farmaceuta" : "Kontakt"}
@@ -942,6 +1131,7 @@ function Contact() {
     </Page>
   )
 }
+
 function NotFound() {
   return (
     <Page title="Stranica nije pronađena">
@@ -952,28 +1142,57 @@ function NotFound() {
     </Page>
   )
 }
-const AdminDesign = lazy(() => import("../admin/Admin").then(module => ({ default: module.Admin })));
+
+const AdminDesign = lazy(() =>
+  import("../admin/Admin").then((module) => ({ default: module.Admin })),
+)
+
 function AdminPreview() {
-  return <AdminAccess><Suspense fallback={<div className="p-8">Učitavanje administracije…</div>}><AdminDesign /></Suspense></AdminAccess>;
+  return (
+    <AdminAccess>
+      <Suspense
+        fallback={<div className="p-8">Učitavanje administracije…</div>}
+      >
+        <AdminDesign />
+      </Suspense>
+    </AdminAccess>
+  )
 }
+
 const router = createBrowserRouter([
   { path: "admin", Component: AdminPreview },
+
   { path: "admin/:section", Component: AdminPreview },
+
   {
     Component: Root,
+
     children: [
       { index: true, Component: Home },
+
       { path: "kategorije", Component: CategoryPage },
+
       { path: "kategorije/:categoryId", Component: ProductsPage },
+
       { path: "proizvodi", Component: ProductsPage },
+
       { path: "proizvodi/:id", Component: ProductDetail },
+
+      { path: "akcija", element: <CollectionSection kind="sale" full /> },
+      { path: "popularno", element: <CollectionSection kind="popular" full /> },
+      { path: "clanci", Component: AdvicePage },
+      { path: "clanci/:id", Component: AdvicePage },
       { path: "savjeti", Component: AdvicePage },
+
       { path: "savjeti/:id", Component: AdvicePage },
+
       { path: "kontakt", Component: Contact },
+
       { path: "*", Component: NotFound },
     ],
   },
 ])
+
 export default function App() {
   return <RouterProvider router={router} />
 }
